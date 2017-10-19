@@ -1,15 +1,13 @@
 ﻿using ManagedBass;
 using System;
 using System.ComponentModel;
-using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-
-namespace Musiq.Providers.Player
+namespace Musiq.Providers.Controls
 {
-    public abstract class PlayerBase : INotifyPropertyChanged, IDisposable
+    public abstract class ControlBase : INotifyPropertyChanged, IDisposable
     {
         #region Fields
         readonly SynchronizationContext _syncContext;
@@ -59,7 +57,7 @@ namespace Musiq.Providers.Player
             };
         }
 
-        static PlayerBase()
+        static ControlBase()
         {
             var currentDev = Bass.CurrentDevice;
 
@@ -67,7 +65,7 @@ namespace Musiq.Providers.Player
                 Bass.Init(currentDev);
         }
 
-        public PlayerBase()
+        public ControlBase()
         {
             _syncContext = SynchronizationContext.Current;
         }

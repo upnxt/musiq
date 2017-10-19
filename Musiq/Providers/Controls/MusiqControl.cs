@@ -2,11 +2,11 @@
 using Musiq.Handlers;
 using System;
 
-namespace Musiq.Providers.Player
+namespace Musiq.Providers.Controls
 {
-    public class MusiqPlayer : PlayerBase
+    public class MusiqControl : ControlBase, IMusiqControl
     {
-        public MusiqPlayer()
+        public MusiqControl()
         {
             MediaLoaded += MusiqPlayer_MediaLoaded;
         }

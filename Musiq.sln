@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.26430.16
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Musiq", "Musiq\Musiq.csproj", "{16D135AF-2DFC-455A-96DA-45371EB5DC8B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MusiqTests", "MusiqTests\MusiqTests.csproj", "{5ACE476C-92BB-4390-9EDF-0BDA67AFE262}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MusiqTests", "MusiqTests\MusiqTests.csproj", "{5ACE476C-92BB-4390-9EDF-0BDA67AFE262}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

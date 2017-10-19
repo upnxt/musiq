@@ -13,14 +13,20 @@ namespace Musiq.Providers.Library
 
         public List<Track> Playlist { get; }
 
-        public void Find(params string[] paths)
+        public bool Find(params string[] paths)
         {
+
             foreach (var path in paths)
             {
+                if (!Directory.Exists(path))
+                    continue;
+
                 var files = Directory.GetFiles(path, "*.mp3");
                 foreach (var file in files)
                     Playlist.Add(new Track { FileName = file });
             }
+
+            return Playlist.Count > 0;
         }
     }
 }

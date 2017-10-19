@@ -2,156 +2,142 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Musiq.Providers.Player;
-using Musiq.Providers.Library;
+using Musiq.Providers.Controls;
 using System.Text;
 using Musiq.UI;
-using Musiq.Models;
-using System.IO;
-using System.Reflection;
 
 namespace Musiq
 {
     class Program
     {
-        private static object _lockObj = new object();
-
         private static int _currentSongCursor;
         private static CancellationTokenSource _ts;
-
-        private static ProgressBar _progressBar;
-        private static TrackHud _track;
-        private static Controls _controls;
 
         static void Main(string[] args)
         {
             Console.OutputEncoding = Encoding.Unicode;
             Console.CursorVisible = false;
 
-            var layout = new Layout();
+            var ui = new Queue<Action>();
 
-            _progressBar = new ProgressBar(layout);
-            _track = new TrackHud(layout);
-            _controls = new Controls(layout);
-
-
-            var path = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), @"..\..\..\..\dependencies");
-            var library = new MusiqLibrary();
-            library.Find(path);
-
-            using (var player = new MusiqPlayer())
+            Task.Run(() =>
             {
-                ListTracks(library.Playlist, 0);
-                var selectedSongCursor = 0;
-                _ts = new CancellationTokenSource();
-                Task.Factory.StartNew(() => PlayerHud(player, _ts), _ts.Token);
-
-                do
+                while (true)
                 {
-                    while (!Console.KeyAvailable)
+                    if (ui.Count > 0)
                     {
-                        var key = Console.ReadKey(true).Key;
-                        switch (key)
-                        {
-                            case ConsoleKey.DownArrow:
-                                if (selectedSongCursor >= library.Playlist.Count - 1)
-                                {
-                                    selectedSongCursor = 0;
-                                }
-                                else
-                                    selectedSongCursor += 1;
-
-                                ListTracks(library.Playlist, selectedSongCursor);
-                                _currentSongCursor = _track.Play(player, library.Playlist, _currentSongCursor, selectedSongCursor);
-                                break;
-
-                            case ConsoleKey.UpArrow:
-                                if (selectedSongCursor <= 0)
-                                {
-                                    selectedSongCursor = 0;
-                                }
-                                else
-                                    selectedSongCursor -= 1;
-
-                                ListTracks(library.Playlist, selectedSongCursor);
-                                _currentSongCursor = _track.Play(player, library.Playlist, _currentSongCursor, selectedSongCursor);
-
-                                break;
-
-                            case ConsoleKey.P:
-
-                                if (!player.IsPlaying)
-                                {
-                                    _currentSongCursor = _track.Play(player, library.Playlist, _currentSongCursor, selectedSongCursor);
-                                }
-                                else
-                                {
-                                    player.Pause();
-                                }
-
-                                break;
-
-                            case ConsoleKey.RightArrow:
-                                player.FastForward();
-                                break;
-
-                            case ConsoleKey.LeftArrow:
-                                player.Rewind();
-                                break;
-
-                            case ConsoleKey.Home:
-                                player.Restart();
-                                break;
-
-                            case ConsoleKey.End:
-                                player.End();
-                                break;
-
-                            case ConsoleKey.PageUp:
-                                player.Volume += 1;
-                                break;
-
-                            case ConsoleKey.PageDown:
-                                player.Volume -= 1;
-                                break;
-                        }
+                        var action = ui.Dequeue();
+                        if (action != null)
+                            action.Invoke();
                     }
-                } while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+                }
+            });
 
-                player.Stop();
+            var window = new Window();
+            var quit = false;
 
-                Console.WriteLine("Press any key to exit");
-                Console.ReadKey();
-            }
-        }
-
-        private static void PlayerHud(MusiqPlayer player, CancellationTokenSource ts)
-        {
-            var height = Console.WindowTop + Console.WindowHeight - 5;
-
-            while (true)
+            using (var player = new Player(ui, new MusiqControl(), new ProgressBar(window), new TrackHud(window), new Settings(window)))
             {
-                _progressBar.Display(player.Duration, player.Position);
-                _track.Display(player);
-                _controls.Display(player);
+                player.ListTracks(player.Playlist, 0);
+                var selectedSongCursor = 0;
 
-                Thread.Sleep(500);
+                _ts = new CancellationTokenSource();
+                Task.Factory.StartNew(() => player.HUD(_ts), _ts.Token);
 
-                if (ts.IsCancellationRequested)
-                    break;
-            }
-        }
+                while (!quit)
+                {
+                    var key = Console.ReadKey(true).Key;
+                    switch (key)
+                    {
+                        case ConsoleKey.DownArrow:
+                            if (selectedSongCursor >= player.Playlist.Count - 1)
+                            {
+                                selectedSongCursor = 0;
+                            }
+                            else
+                                selectedSongCursor += 1;
 
-        private static void ListTracks(List<Track> tracks, int selected)
-        {
-            for (var i = 0; i < tracks.Count; i++)
-            {
-                if (selected == i)
-                    Console.BackgroundColor = ConsoleColor.DarkCyan;
+                            player.ListTracks(player.Playlist, selectedSongCursor);
+                            _currentSongCursor = player.Play(_currentSongCursor, selectedSongCursor);
+                            break;
 
-                Console.SetCursorPosition(0, i);
-                Console.WriteLine(tracks[i].FileName);
-                Console.ResetColor();
+                        case ConsoleKey.UpArrow:
+                            if (selectedSongCursor <= 0)
+                            {
+                                selectedSongCursor = 0;
+                            }
+                            else
+                                selectedSongCursor -= 1;
+
+                            player.ListTracks(player.Playlist, selectedSongCursor);
+                            _currentSongCursor = player.Play(_currentSongCursor, selectedSongCursor);
+
+                            break;
+
+                        case ConsoleKey.P:
+
+                            if (!player.IsPlaying)
+                            {
+                                _currentSongCursor = player.Play(_currentSongCursor, selectedSongCursor);
+                            }
+                            else
+                            {
+                                player.Pause();
+                            }
+
+                            break;
+
+                        case ConsoleKey.RightArrow:
+                            player.FastForward();
+                            break;
+
+                        case ConsoleKey.LeftArrow:
+                            player.Rewind();
+                            break;
+
+                        case ConsoleKey.Home:
+                            player.Restart();
+                            break;
+
+                        case ConsoleKey.End:
+                            player.End();
+                            break;
+
+                        case ConsoleKey.PageUp:
+                            player.Volume += 1;
+                            break;
+
+                        case ConsoleKey.PageDown:
+                            player.Volume -= 1;
+                            break;
+
+                        case ConsoleKey.O:
+                            ui.Enqueue(() =>
+                            {
+                                player.Stop();
+
+                                Console.Clear();
+                                Console.SetCursorPosition(0, 0);
+                                Console.Write("Add song directory: ");
+                                var path = Console.ReadLine();
+
+                                player.LoadPlaylist(path);
+                                player.ListTracks(player.Playlist, selectedSongCursor);
+                            });
+                            break;
+
+                        case ConsoleKey.Escape:
+                        case ConsoleKey.Q:
+                                player.Stop();
+                                _ts.Cancel();
+                                quit = true;
+
+                                Console.Clear();
+                                Console.SetCursorPosition(0, 0);
+                                Console.Write("Quitting...");
+                            break;
+                    }
+                }
             }
         }
     }

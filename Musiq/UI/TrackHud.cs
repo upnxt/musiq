@@ -1,5 +1,5 @@
 ﻿using Musiq.Models;
-using Musiq.Providers.Player;
+using Musiq.Providers.Controls;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -9,16 +9,16 @@ namespace Musiq.UI
     public class TrackHud
     {
         private static object _lockObj = new object();
-        private readonly Layout _layout;
+        private readonly Window _window;
 
-        public TrackHud(Layout layout)
+        public TrackHud(Window window)
         {
-            _layout = layout;
+            _window = window;
         }
 
-        public void Display(MusiqPlayer player)
+        public void Display(MusiqControl player)
         {
-            Console.SetCursorPosition(2, _layout.Height - 3);
+            Console.SetCursorPosition(2, _window.Height - 4);
 
             if (player.IsPlaying)
             {
@@ -31,7 +31,7 @@ namespace Musiq.UI
                 Console.Write($"{(char)9612}{(char)9612} "); //pause
             }
 
-            Console.Write(player.Title.PadRight(_layout.Width - 9));
+            Console.Write(player.Title.PadRight(_window.Width - 9));
 
             var trackMetaData = new StringBuilder();
             trackMetaData.Append($"{player.Artist}, ");
@@ -39,15 +39,19 @@ namespace Musiq.UI
             if (!string.IsNullOrWhiteSpace(player.Album))
                 trackMetaData.Append(player.Album);
 
-            Console.SetCursorPosition(5, _layout.Height - 2);
-            Console.Write(trackMetaData.ToString().Trim(new[] { ',', ' ' }).PadRight(_layout.Width - 10));
+            Console.SetCursorPosition(5, _window.Height - 3);
+            Console.Write(trackMetaData.ToString().Trim(new[] { ',', ' ' }).PadRight(_window.Width - 10));
 
-            Console.SetCursorPosition(_layout.Width - 10, _layout.Height - 3);
+            Console.SetCursorPosition(_window.Width - 10, _window.Height - 4);
             Console.Write("{0:D2}:{1:D2}:{2:D2}", player.RemainingTime.Hours, player.RemainingTime.Minutes, player.RemainingTime.Seconds);
+            _window.ResetCursor();
         }
 
-        public int Play(MusiqPlayer player, List<Track> tracks, int currentSongCursor, int selectedSongCursor)
+        public int Play(MusiqControl player, List<Track> tracks, int currentSongCursor, int selectedSongCursor)
         {
+            if (tracks?.Count <= 0)
+                return 0;
+
             lock (_lockObj)
             {
                 if (currentSongCursor != selectedSongCursor || player.Duration.TotalSeconds < 0)

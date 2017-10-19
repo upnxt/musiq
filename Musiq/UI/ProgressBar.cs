@@ -4,28 +4,29 @@ namespace Musiq.UI
 {
     public class ProgressBar
     {
-        private readonly Layout _layout;
+        private readonly Window _window;
 
-        public ProgressBar(Layout layout)
+        public ProgressBar(Window window)
         {
-            _layout = layout;
+            _window = window;
         }
 
         public void Display(TimeSpan duration, TimeSpan position)
         {
-            for (var i = 0; i < _layout.Width; i++)
+            for (var i = 0; i < _window.Width; i++)
             {
                 Console.ForegroundColor = ConsoleColor.Green;
 
                 var percentRemaining = position.TotalSeconds /duration.TotalSeconds;
-                if ((double)i / (double)_layout.Width >= percentRemaining)
+                if ((double)i / (double)_window.Width >= percentRemaining)
                     Console.ResetColor();
 
-                Console.SetCursorPosition(i, (_layout.Height - 5));
+                Console.SetCursorPosition(i, (_window.Height - 6));
                 Console.Write("=");
             }
 
             Console.ResetColor();
+            _window.ResetCursor();
         }
     }
 }
